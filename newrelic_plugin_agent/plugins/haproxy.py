@@ -21,7 +21,9 @@ class HAProxy(base.CSVStatsPlugin):
                        'Connections': 'connections'},
             'Warnings': {'Retry': 'retries', 'Redispatch': 'redispatches'},
             'Server': {'Downtime': 'ms'},
-            'Bytes': {'In': 'bytes', 'Out': 'bytes'}}
+            'Bytes': {'In': 'bytes', 'Out': 'bytes'},
+            'Hosts': {'Down': 'hosts', 'Up': 'hosts' }
+            }
 
     def sum_data(self, stats):
         """Return the summed data as a dict
@@ -35,7 +37,9 @@ class HAProxy(base.CSVStatsPlugin):
                 'Denied': {'Request': 0, 'Response': 0},
                 'Errors': {'Request': 0, 'Response': 0, 'Connections': 0},
                 'Warnings': {'Retry': 0, 'Redispatch': 0},
-                'Server': {'Downtime': 0}}
+                'Server': {'Downtime': 0},
+                'Hosts': {'Down':0, 'Up': 0}
+                }
         for row in stats:
             data['Queue']['Current'] += int(row.get('qcur') or 0)
             data['Queue']['Max'] += int(row.get('qmax') or 0)
@@ -52,6 +56,8 @@ class HAProxy(base.CSVStatsPlugin):
             data['Warnings']['Retry'] += int(row.get('wretr') or 0)
             data['Warnings']['Redispatch'] += int(row.get('wredis') or 0)
             data['Server']['Downtime'] += int(row.get('downtime') or 0)
+            data['Hosts']['Down'] += 1 if row.get('status') == 'DOWN' else 0
+            data['Hosts']['Up'] += 1 if row.get('status') == 'UP' else 0
         return data
 
     def add_datapoints(self, stats):
