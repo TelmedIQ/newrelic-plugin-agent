@@ -22,7 +22,7 @@ class HAProxy(base.CSVStatsPlugin):
             'Warnings': {'Retry': 'retries', 'Redispatch': 'redispatches'},
             'Server': {'Downtime': 'ms'},
             'Bytes': {'In': 'bytes', 'Out': 'bytes'},
-            'Hosts': {'Down': 'hosts', 'Up': 'hosts' }
+            'Hosts': {'Down': 'hosts', 'Up': 'hosts', 'In Maintenance':  'hosts'}
             }
 
     def sum_data(self, stats):
@@ -38,7 +38,7 @@ class HAProxy(base.CSVStatsPlugin):
                 'Errors': {'Request': 0, 'Response': 0, 'Connections': 0},
                 'Warnings': {'Retry': 0, 'Redispatch': 0},
                 'Server': {'Downtime': 0},
-                'Hosts': {'Down':0, 'Up': 0}
+                'Hosts': {'Down': 0, 'Up': 0, 'In Maintenance': 0}
                 }
         for row in stats:
             data['Queue']['Current'] += int(row.get('qcur') or 0)
@@ -58,6 +58,7 @@ class HAProxy(base.CSVStatsPlugin):
             data['Server']['Downtime'] += int(row.get('downtime') or 0)
             data['Hosts']['Down'] += 1 if row.get('status') == 'DOWN' else 0
             data['Hosts']['Up'] += 1 if row.get('status') == 'UP' else 0
+            data['Hosts']['In Maintenance'] += 1 if row.get('status') == 'MAINT' else 0
         return data
 
     def add_datapoints(self, stats):
