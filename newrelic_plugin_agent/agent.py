@@ -219,7 +219,7 @@ class NewRelicPluginAgent(helper.Controller):
 
         LOGGER.info('Sending %i metrics to NewRelic', metrics)
         body = {'agent': self.agent_data, 'components': components}
-        LOGGER.debug(body)
+        LOGGER.info(body)
         try:
             response = requests.post(self.endpoint,
                                      headers=self.http_headers,
