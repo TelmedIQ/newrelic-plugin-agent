@@ -71,7 +71,7 @@ class HAProxy(base.CSVStatsPlugin):
             return
         stats = self.sum_data(stats)
 
-        for section in [key for key in stats.keys() if key != 'server']:
+        for section in [key for key in stats.keys() if (key != 'server' or key != 'Hosts')]:
             for key in stats[section].keys():
                 self.add_derive_value('%s/%s' % (section, key),
                                       self.UNIT.get(section,
@@ -79,3 +79,6 @@ class HAProxy(base.CSVStatsPlugin):
                                       stats[section][key])
         self.add_gauge_value('Server/Downtime', 'ms',
                              stats['Server']['Downtime'])
+        self.add_gauge_value('Hosts/Down', 'hosts', stats['Hosts']['Down'])
+        self.add_gauge_value('Hosts/Up', 'hosts', stats['Hosts']['Up'])
+        self.add_gauge_value('Hosts/Down', 'hosts', stats['Hosts']['In Maintenance'])
