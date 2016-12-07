@@ -3,6 +3,8 @@ PostgreSQL Plugin
 
 """
 import logging
+
+from datetime import datetime
 import psycopg2
 from psycopg2 import extensions
 from psycopg2 import extras
@@ -66,6 +68,10 @@ FROM (
 ) AS s;
 """
 
+REPLICATION_DELAY = """
+SELECT now() - pg_last_xact_replay_timestamp() AS replication_delay;
+"""
+
 LOCK_MAP = {'AccessExclusiveLock': 'Locks/Access Exclusive',
             'AccessShareLock': 'Locks/Access Share',
             'ExclusiveLock': 'Locks/Exclusive',
@@ -79,7 +85,7 @@ LOCK_MAP = {'AccessExclusiveLock': 'Locks/Access Exclusive',
 
 class PostgreSQL(base.Plugin):
 
-    GUID = 'com.meetme.newrelic_postgresql_agent'
+    GUID = 'com.telmediq.newrelic_postgresql_agent'
 
     def add_stats(self, cursor):
         self.add_backend_stats(cursor)
@@ -91,6 +97,7 @@ class PostgreSQL(base.Plugin):
             self.add_statio_stats(cursor)
             self.add_table_stats(cursor)
         self.add_replication_stats(cursor)
+        self.add_replication_delay_stats(cursor)
         self.add_transaction_stats(cursor)
 
         # add_wal_metrics needs superuser to get directory listings
@@ -249,10 +256,21 @@ class PostgreSQL(base.Plugin):
     def add_replication_stats(self, cursor):
         cursor.execute(REPLICATION)
         temp = cursor.fetchall()
+        count = 0
         for row in temp:
+            count += 1
             self.add_gauge_value('Replication/%s' % row.get('client_addr', 'Unknown'),
                                  'byte_lag',
                                  int(row.get('byte_lag', 0)))
+        self.add_gauge_value('Replication/Instances', 'instances', count)
+
+    def add_replication_delay_stats(self, cursor):
+        cursor.execute(REPLICATION_DELAY)
+        temp = cursor.fetchone()
+        delay = temp.get('replication_delay', "00:00:00.000000")
+        delay = datetime.strptime(delay, '%H:%M:%S.%f')
+        delay = "{}.{}".format((delay.hour * 3600) + (delay.minute * 60) + delay.second, delay.microsecond)
+        self.add_gauge_value('Replication/Delay', 'time', float(delay))
 
     def connect(self):
         """Connect to PostgreSQL, returning the connection object.
