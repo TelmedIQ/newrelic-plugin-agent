@@ -242,20 +242,19 @@ class PostgreSQL(base.Plugin):
     def add_replication_stats(self, cursor):
         cursor.execute(REPLICATION_INSTANCES)
         temp = cursor.fetchall()
-        count = 0
         for row in temp:
-            count += 1
-            self.add_gauge_value('Replication/%s' % row.get('client_addr', 'Unknown'),
-                                 'byte_lag',
-                                 int(row.get('byte_lag', 0)))
-        self.add_gauge_value('Replication/Instances', 'instances', count)
+            self.add_gauge_value('Replication/Instances', 'count', int(row.get('count', 0)))
 
     def add_replication_delay_stats(self, cursor):
+        LOGGER.debug("Getting Replication delay")
         cursor.execute(REPLICATION_DELAY)
-        temp = cursor.fetchone()
-        delay = temp.get('replication_delay', "00:00:00.000000")
-        delay = datetime.strptime(delay, '%H:%M:%S.%f')
-        delay = "{}.{}".format((delay.hour * 3600) + (delay.minute * 60) + delay.second, delay.microsecond)
+        temp = cursor.fetchall()
+        LOGGER.debug("Got Replication delay: {}".format(temp))
+        delay = 0
+        for row in temp:
+            delay = row.get('replication_delay', "00:00:00.000000")
+            delay = datetime.strptime(delay, '%H:%M:%S.%f')
+            delay = "%d.%d" % ((delay.hour * 3600) + (delay.minute * 60) + delay.second, delay.microsecond)
         self.add_gauge_value('Replication/Delay', 'time', float(delay))
 
     def connect(self):
