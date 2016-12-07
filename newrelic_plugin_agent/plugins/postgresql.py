@@ -50,22 +50,8 @@ BGWRITER = 'SELECT * FROM pg_stat_bgwriter;'
 DATABASE = 'SELECT * FROM pg_stat_database;'
 LOCKS = 'SELECT mode, count(mode) AS count FROM pg_locks ' \
         'GROUP BY mode ORDER BY mode;'
-REPLICATION = """
-SELECT
-    client_hostname,
-    client_addr,
-    state,
-    sent_offset - (
-        replay_offset - (sent_xlog - replay_xlog) * 255 * 16 ^ 6 ) AS byte_lag
-FROM (
-    SELECT
-        client_addr, client_hostname, state,
-        ('x' || lpad(split_part(sent_location,   '/', 1), 8, '0'))::bit(32)::bigint AS sent_xlog,
-        ('x' || lpad(split_part(replay_location, '/', 1), 8, '0'))::bit(32)::bigint AS replay_xlog,
-        ('x' || lpad(split_part(sent_location,   '/', 2), 8, '0'))::bit(32)::bigint AS sent_offset,
-        ('x' || lpad(split_part(replay_location, '/', 2), 8, '0'))::bit(32)::bigint AS replay_offset
-    FROM pg_stat_replication
-) AS s;
+REPLICATION_INSTANCES = """
+SELECT COUNT(*) FROM pg_stat_replication;
 """
 
 REPLICATION_DELAY = """
@@ -254,7 +240,7 @@ class PostgreSQL(base.Plugin):
                               temp.get('done_count', 0))
 
     def add_replication_stats(self, cursor):
-        cursor.execute(REPLICATION)
+        cursor.execute(REPLICATION_INSTANCES)
         temp = cursor.fetchall()
         count = 0
         for row in temp:
