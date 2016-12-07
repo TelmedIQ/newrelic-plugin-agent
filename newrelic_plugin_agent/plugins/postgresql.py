@@ -4,7 +4,7 @@ PostgreSQL Plugin
 """
 import logging
 
-from datetime import datetime
+from datetime import timedelta
 import psycopg2
 from psycopg2 import extensions
 from psycopg2 import extras
@@ -252,8 +252,7 @@ class PostgreSQL(base.Plugin):
         LOGGER.debug("Got Replication delay: {}".format(temp))
         delay = 0
         for row in temp:
-            delay = row.get('replication_delay', "00:00:00.000000")
-            delay = datetime.strptime(delay, '%H:%M:%S.%f')
+            delay = row.get('replication_delay', timedelta(0, 0, 0))
             delay = "%d.%d" % ((delay.hour * 3600) + (delay.minute * 60) + delay.second, delay.microsecond)
         self.add_gauge_value('Replication/Delay', 'time', float(delay))
 
