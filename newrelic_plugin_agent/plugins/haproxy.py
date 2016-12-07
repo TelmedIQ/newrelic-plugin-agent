@@ -84,4 +84,4 @@ class HAProxy(base.CSVStatsPlugin):
         LOGGER.info('MAINT: %d', stats['Hosts']['In Maintenance'])
         self.add_gauge_value('Hosts/Down', 'hosts', stats['Hosts']['Down'])
         self.add_gauge_value('Hosts/Up', 'hosts', stats['Hosts']['Up'])
-        self.add_gauge_value('Hosts/Down', 'hosts', stats['Hosts']['In Maintenance'])
+        self.add_gauge_value('Hosts/In Maintenance', 'hosts', stats['Hosts']['In Maintenance'])
