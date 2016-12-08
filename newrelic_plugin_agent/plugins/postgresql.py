@@ -255,7 +255,7 @@ class PostgreSQL(base.Plugin):
                 delay = "%d.%d" % (delay.seconds, delay.microseconds)
         except Exception as e:
             LOGGER.warning(e)
-        self.add_gauge_value('Replication/Delay', 'time', float(delay))
+        self.add_gauge_value('Replication/Delay', 'seconds', float(delay))
 
     def connect(self):
         """Connect to PostgreSQL, returning the connection object.
