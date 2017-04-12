@@ -227,7 +227,7 @@ class NewRelicPluginAgent(helper.Controller):
                                      data=json.dumps(body, ensure_ascii=False),
                                      timeout=self.config.get('newrelic_api_timeout', 10),
                                      verify=self.config.get('verify_ssl_cert',
-                                                            True))
+                                                            False))
             LOGGER.debug('Response: %s: %r',
                          response.status_code,
                          response.content.strip())
